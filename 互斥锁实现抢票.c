@@ -4,13 +4,14 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+
 static int num = 10000;  // 临界资源
 pthread_mutex_t mutex;   // 全局锁
+
 void* Buy(void* i)
 {
-  int id = (*(int*)i);
+  int id = (int)i;
 
-  // 抢票操作
   while(1)
   {
     pthread_mutex_lock(&mutex);
@@ -29,17 +30,16 @@ void* Buy(void* i)
 
 int main()
 {
-
   // 初始化锁
   pthread_mutex_init(&mutex, NULL);
 
-  // 主线程创建 5 个线程去抢票
+  // 主线程创建线程抢票
   pthread_t tid[5] = {0};
   int i = 0;
   for(i = 0; i < 5; ++i)
   {
-    int ret = pthread_create(&tid[i], NULL, Buy, (void*)&i);
-    if(ret < 0)
+    int ret = pthread_create(&tid[i], NULL, Buy, (void*)i);
+    if(ret != 0)
     {
       perror("pthread create error!");
       return -1;
