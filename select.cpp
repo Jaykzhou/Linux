@@ -1,6 +1,7 @@
 // 利用select模型监听标准输入(0号描述符)，体会多路转接IO的功能
 #include <iostream>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/select.h>
 #include <sys/time.h>
 using namespace std;
@@ -22,9 +23,13 @@ void Select()
   // 加载到内核中进行监控
   while(1)
   {
+    // 体会阻塞与非阻塞监听
+    cout << "i am student." << endl;
+    sleep(2);
+
     // 限时阻塞的时间限制(注: 内核中的限时阻塞时间需要每检测一次设置一次，内核在监听完毕之后会自动的将其置为 0)
-    struct timeval tv;
-    tv.tv_sec = 3;                                          // 秒
+    struct timeval tv;                                      // 将阻塞时间设置为 0，表示当前为非阻塞模式。
+    tv.tv_sec = 0;                                          // 秒
     tv.tv_usec = 0;                                         // 毫秒
     
     FD_SET(0, &readset);                                    // 每次向集合中重新添加事件，放到内核中进行监控
