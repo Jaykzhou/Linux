@@ -8,8 +8,8 @@ using namespace std;
 // 非阻塞IO模式
 void SETNONBLOCK()
 {
-  int flags =  fcntl(0, F_GETFD);
-  fcntl(0,flags | F_SETFD);
+  int flags =  fcntl(0, F_GETFL);
+  fcntl(0,flags | F_SETFL);
 }
 
 // int poll(struct pollfd *fds, nfds_t nfds, int timeout);  timeout 的单位为毫秒
@@ -34,6 +34,7 @@ int main()
     {
       cout << "wait timeout" << endl;
       sleep(1);
+      continue;
     }
 
     // 依次处理所发生的事件
@@ -48,7 +49,6 @@ int main()
       }
     }
 
-    cout << "-------------------" << endl;
 
   }
 
