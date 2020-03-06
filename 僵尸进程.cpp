@@ -4,48 +4,49 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
 using namespace std;
 
 // SIGCHLD 信号的处理方式
-void sigcd(int data)
+void sigcd(int signo)
 {
-  int num = 0;
-  waitpid(17, &num, WNOHANG);
-  cout << "我收到了 SIGCHLD 信号了~~" << endl;
+  int num;
+  int ret = waitpid(-1, &num, 0);
+  if(ret < 0)
+      perror("waitpid error");
 
-  cout << num << endl;
+  if(WIFEXITED(num))
+  {
+    num = WEXITSTATUS(num);
+    cout << "返回状态码: " << num << endl;
+  }
 }
 
-int childfun()
+void childfun()
 {
-  int num = 1024;
   cout << "我在学习中~~~" << endl;
-  exit(num);
+  exit(-1);
 }
 
 void fatherfun()
 {
   cout << "我在打电话~~~" << endl;
+  while(1);
 }
 
 int main()
 {
-  // 重定义 SIGCHLD 信号的处理方式
   signal(SIGCHLD, sigcd);
 
   pid_t pid = 0;
   pid = fork();
-  if(pid == 0)
-  {
-    // 子进程
+  if(pid < 0)
+      perror("fork error");
+  else if(pid == 0)
     childfun();
-  }
   else
-  {
-    // 父进程
     fatherfun();
-    sleep(20);
-  }
 
   return 0;
 }
