@@ -10,7 +10,7 @@
 using namespace std;
 
 #define SPORT 8888
-#define SADDR 192.168.248.129
+#define SADDR "192.168.248.129"
 
 int main()
 {
@@ -27,7 +27,7 @@ int main()
     struct sockaddr_in saddr;
     saddr.sin_family = AF_INET;
     saddr.sin_port = htons(SPORT);
-    saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    inet_pton(AF_INET, SADDR, (void*)&saddr.sin_addr);
     int ret = bind(sfd, (struct sockaddr*)&saddr, sizeof(saddr));
     if(ret < 0)
     {
@@ -63,6 +63,8 @@ int main()
         char* str = "what are you doing?\n";
         write(cfd, str, strlen(str));
     }
+
+    close(sfd);
     
     return 0;
 }
