@@ -9,6 +9,8 @@
 #include <signal.h>
 #include <strings.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
 using namespace std;
 
 void handle(int signo)
@@ -18,12 +20,18 @@ void handle(int signo)
     char buf[1024];
     bzero(buf, 1024);
     read(0, buf, 1024);
-    cout << buf << endl;
+    cout << buf;
 }
 
 int main()
 {
     signal(SIGIO, handle);
+
+    // 设置接受SIGIO信号的进程
+    fcntl(0, F_SETOWN, getpid());
+    // 设置异步标记 O_ASYNC
+    int flag = fcntl(0, F_GETFL);
+    fcntl(0, F_SETFL, flag | O_ASYNC);
 
     while(1)
     {
