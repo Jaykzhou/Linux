@@ -89,7 +89,7 @@ void* handle(void* arg)
         else if(ret == 0)
         {
             cout << "peer shutdown!" << endl;
-            close(cfddata->cfd);             
+            close(cfddata->cfd);       // 最好的方式是从红黑树中删除该条记录，方便下次通信(简易版)     
             return NULL;
         }
         
