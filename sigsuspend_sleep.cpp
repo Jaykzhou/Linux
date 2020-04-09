@@ -44,8 +44,8 @@ int Sleep(int sec)
     // 清空计时器
     alarm(0);
 
-    // 恢复原有的 SIGALRM 
-    sigprocmask(SIG_UNBLOCK, &oldmask, NULL);
+    // 恢复原有的信号屏蔽字 
+    sigprocmask(SIG_SETMASK, &oldmask, NULL);
 
     // 恢复原有的 SIGALRM 处理动作
     sigaction(SIGALRM, &oldact, NULL);
