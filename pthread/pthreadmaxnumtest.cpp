@@ -23,7 +23,7 @@ int main()
     while(1)
     {
         int ret = pthread_create(&tid, NULL, pthread_handler, NULL);
-        if(ret < 0)
+        if(ret != 0)
         {
             perror("pthread_create error!");
             exit(-1);
