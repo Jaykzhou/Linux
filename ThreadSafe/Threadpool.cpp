@@ -135,7 +135,7 @@ class ThreadPool
 
         void ThreadPool_Destroy()
         {
-            flag = true;
+            flag = true;        // 注: 最好加锁。由于当前只在主线程中使用，因此可以在逻辑上避免竞态条件的产生
 
             while(curthread > 0) 
             {
