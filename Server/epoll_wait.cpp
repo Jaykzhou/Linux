@@ -133,11 +133,11 @@ int main()
                 {
                     struct sockaddr_in cliaddr;
                     socklen_t len = sizeof(sockaddr_in);
-                    int ret = accept(fd, (struct sockaddr*)&cliaddr, &len);
-                    if(ret < 0)
-                    {
-                        perror("accept error!");
-                        exit(-1);
+                    int ret = accept(fd, (struct sockaddr*)&cliaddr, &len);    // 事件触发，等待事件的进程全部被唤醒，但是只有一个
+                    if(ret < 0)                                                // 进程可以处理事件，此时socket是阻塞状态，因此，其
+                    {                                                          // 它的进程都阻塞在accept上等待客户端的新链接。如果
+                        perror("accept error!");                               // 设置socket为非阻塞，那么其他客户端在accept失败之
+                        exit(-1);                                              // 就会退出。
                     }
                     else 
                     {
