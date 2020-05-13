@@ -2,6 +2,8 @@
 // 模拟场景: 进程惊群现象
 //     在父进程中进行socket, bind, listen之后，然后将该socket加入到epoll当中，然后fork出来多次子进程进行epoll_wait
 //     等待事件，然后通过nc连接到服务器检测是否会发生epoll惊群现象，之后直接关闭socket，不在模拟读写等操作。
+// 结论:
+//      在fork之前创建epoll_create，即所有进程使用同一颗红黑树。在新的内核中不会引发惊群问题，大致思路与accept相似
 #include <iostream>
 #include <vector>
 #include <stdio.h>
