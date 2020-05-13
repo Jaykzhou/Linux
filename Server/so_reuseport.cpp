@@ -1,7 +1,10 @@
-// 使用 SO_REUSEPORT 新特性解决epoll惊群问题
-// 具体思路:
-//     循环创建多个子进程，在每个子进程对套接字设置so_reuseprot选项，并且将子进程绑定在该套接字上，然后将该套接字加入到epoll中，
-//     调用epoll_wait进行事件等待，当事件发生时，检测是否有惊群现象发生。
+// 解决epoll惊群问题 
+// 解决思路:
+//     使用SO_REUSEPORT特性在内核层面上解决epoll惊群的现象
+// 具体实现:
+//     创建子进程，在每个子进程中socket，bind，listen等操作为不同的进程绑定相同的端口，然后epoll_create，epoll_wait等相关操作
+//     在不同进程中监听相同的端口，当连接请求时，内核会根据对端的ip与端口生一个hashcode，根据hashcode去唤醒等待队列中相应的进
+//     程，从而避免了惊群现象。
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -98,14 +101,16 @@ void SetNonBlock(int fd)
 void SetSOREUSEPORT(int fd)
 {
     int flag = 1;
-    setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &flag, sizeof(flag));
+    int ret = setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &flag, sizeof(flag));
+    if(ret < 0)
+    {
+        perror("setsockopt error");
+        exit(-1);
+    }
 }
 
 int main()
 {
-    Epoll ep;
-    ep.Epoll_Init();
-
     for(int i = 0; i < PROSIZE; ++i)
     {
         pid_t pid = -1;
@@ -118,13 +123,13 @@ int main()
                 exit(-1);
             }
 
-            SetSOREUSEPORT(sockfd);              // 端口复用
             SetNonBlock(sockfd);                 // 套接字非阻塞
+            SetSOREUSEPORT(sockfd);              // 端口复用
 
             struct sockaddr_in addr;
             addr.sin_family = AF_INET;
             addr.sin_port = htons(PROT);
-            inet_pton(AF_INET, ADDR, &addr.sin_family);
+            inet_pton(AF_INET, ADDR, &addr.sin_addr);
             int ret = bind(sockfd, (struct sockaddr*)&addr, sizeof(addr));
             if(ret < 0)
             {
@@ -135,10 +140,42 @@ int main()
             listen(sockfd, RECVQUE);
             
             // epoll 监听
+            Epoll ep;
+            ep.Epoll_Init();
             ep.Epoll_Add(sockfd);
-            vector<int> socklist;
-            ep.Epoll_Wait(socklist);
 
+            while(1)                // 循环处理事务
+            {
+                vector<int> socklist;
+                ep.Epoll_Wait(socklist);
+                
+                cout << getpid() << "进程被唤醒！" << endl;
+                for(auto fd : socklist)
+                {
+                    if(fd == sockfd)
+                    {
+                        // 监听套接字
+                        struct sockaddr_in sockaddr;
+                        socklen_t len = sizeof(sockaddr);
+                        int ret = accept(sockfd, (struct sockaddr*)&sockaddr, &len);
+                        if(ret < 0)
+                        {
+                            if(errno == EAGAIN)
+                            {
+                                cout << "连接请求已经被处理！" << endl;
+                            }
+                        }
+                        else 
+                        {
+                            cout << getpid() << "连接成功建立！" << endl;
+                        }
+                    }
+                    else 
+                    {
+                        // 通信套接字
+                    }
+                }
+            }
         }
     }
 
